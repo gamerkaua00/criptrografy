@@ -1,4 +1,4 @@
-name: Build KMZ Protocol (Debug Mode)
+name: Build KMZ Pro (No Splash)
 
 on:
   push:
@@ -33,23 +33,28 @@ jobs:
           cd app
           cordova platform add android
           
+          # --- REMOÇÃO DO SPLASH SCREEN NATIVO ---
+          # Adiciona preferência para desativar o splash do Cordova
+          # Assim ele abre direto na tela preta do seu HTML
+          sed -i '/<\/widget>/i \    <preference name="SplashScreen" value="none" />' config.xml
+          sed -i '/<\/widget>/i \    <preference name="ShowSplashScreen" value="false" />' config.xml
+          sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
+          
           # Limpa o app padrão e coloca o seu site
           rm -rf www/*
           cp ../index.html www/index.html
           
-          # Tenta colocar o ícone se existir
+          # Configura Ícone (se existir)
           if [ -f "../icon.png" ]; then
             cp ../icon.png www/icon.png
             sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' config.xml
           fi
           
-          # --- A MUDANÇA MÁGICA ESTÁ AQUI ---
-          # O modo --debug já assina o app automaticamente
+          # Compila em modo Debug (já assinado para instalar fácil)
           cordova build android --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KMZ-Secure-App
-          # O caminho muda para 'debug' e o arquivo para 'app-debug.apk'
+          name: KMZ-Secure-App-v3
           path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
