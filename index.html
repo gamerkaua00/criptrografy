@@ -18,21 +18,24 @@
             --danger: #ff4d4d;
         }
 
-        /* RESET - Proibindo seleção global para não bugar botões */
+        /* RESET BÁSICO */
         * { box-sizing: border-box; outline: none; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
         body {
             background: radial-gradient(circle at top, #111111, var(--bg-dark));
             color: var(--text-light);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
-            user-select: none; -webkit-user-select: none; /* Bloqueia seleção no corpo do app */
         }
 
-        /* LIBERANDO O COLAR/COPIAR NATIVO APENAS NAS CAIXAS DE TEXTO */
-        input, textarea {
-            user-select: text !important;
-            -webkit-user-select: text !important;
+        /* Proteção Visual: Evita seleção apenas na UI, mantendo os inputs livres */
+        .header, .btn, .splash-logo, .splash-sub, .section-title, h2, h3, p, .dev-badge, span {
+            user-select: none; -webkit-user-select: none;
+        }
+
+        textarea, input {
+            user-select: text !important; -webkit-user-select: text !important;
         }
 
         /* --- CUSTOM SCROLLBAR --- */
@@ -41,10 +44,10 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- TOAST NOTIFICATION (CORRIGIDO PARA USO DE GPU) --- */
+        /* --- TOAST NOTIFICATION --- */
         #toast {
             position: fixed; bottom: 30px; left: 50%;
-            transform: translate(-50%, 150%); /* Começa invisível abaixo da tela */
+            transform: translate(-50%, 150%);
             opacity: 0;
             background: var(--primary); color: #000;
             padding: 14px 28px; border-radius: 30px;
@@ -54,10 +57,7 @@
             z-index: 10000; display: flex; align-items: center; gap: 8px;
             white-space: nowrap;
         }
-        #toast.show {
-            transform: translate(-50%, 0); /* Sobe para a posição normal */
-            opacity: 1;
-        }
+        #toast.show { transform: translate(-50%, 0); opacity: 1; }
 
         /* --- SPLASH KMZ --- */
         #splash {
@@ -105,7 +105,6 @@
         .brand { font-weight: 800; font-size: 1.3rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         .brand span { color: var(--primary); }
         
-        /* Layout Flexível para Textos */
         .text-section { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
         .section-title { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; letter-spacing: 1px; padding-left: 5px; }
         
@@ -118,7 +117,6 @@
         textarea:focus { border-color: var(--primary); background: #111; }
         #cipherText { color: var(--primary); font-weight: bold; }
 
-        /* Controles (Botões) */
         .controls { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; }
         
         .btn {
@@ -134,7 +132,7 @@
 
         .divider { height: 1px; background: var(--border); margin: 5px 0; }
 
-        /* --- MODAL DE CONFIGURAÇÕES (MAIOR E MAIS IMPONENTE) --- */
+        /* --- MODAL DE CONFIGURAÇÕES --- */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
@@ -142,7 +140,7 @@
         }
         .modal-box {
             background: #111; padding: 40px 30px; border-radius: 20px; border: 1px solid var(--border);
-            text-align: center; width: 90%; max-width: 400px; /* Aumentado! */
+            text-align: center; width: 90%; max-width: 400px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.9);
         }
         .modal-box h3 { color: var(--primary); margin-bottom: 5px; letter-spacing: 2px; font-size: 1.5rem; }
@@ -230,7 +228,7 @@
     <div id="modal">
         <div class="modal-box">
             <h3>KMZ SYSTEM</h3>
-            <p>Protocolo de Criptografia v6.1</p>
+            <p>Protocolo de Criptografia v6.2</p>
             
             <div class="dev-badge">
                 Desenvolvido por<br><strong>Kauã Mazur dos Reis</strong><br>
@@ -263,7 +261,7 @@
                         document.getElementById('login-screen').style.display = 'flex';
                     }
                 }, 500);
-            }, 1000); // Splash ainda mais ágil
+            }, 1000);
         };
 
         function handleEnter(e) { if(e.key === 'Enter') login(); }
@@ -293,15 +291,24 @@
             m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // MOTOR DE CRIPTOGRAFIA
+        // MOTOR DE CRIPTOGRAFIA (NOVO E MAIS SEGURO PARA ACENTOS)
         const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         const B = "∆ΩθμπΣΦΨωζξλβγα¬®©™£¢§¶¥€!@#$abcdefghijklmnopqrstuvwxyz123456789%&*"; 
+
+        // Funções seguras de conversão UTF-8 <-> Base64
+        function encodeUTF8toB64(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode('0x' + p1)));
+        }
+
+        function decodeB64toUTF8(str) {
+            return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        }
 
         function encriptar() {
             let txt = document.getElementById('plainText').value;
             if(!txt) return showToast("Digite algo primeiro!", "warning");
             try {
-                let b64 = btoa(unescape(encodeURIComponent(txt)));
+                let b64 = encodeUTF8toB64(txt); // Usa o novo motor
                 let res = "";
                 for(let c of b64) res += (A.indexOf(c) > -1) ? B[A.indexOf(c)] : c;
                 document.getElementById('cipherText').value = res;
@@ -316,7 +323,7 @@
             try {
                 let b64 = "";
                 for(let c of txt) b64 += (B.indexOf(c) > -1) ? A[B.indexOf(c)] : c;
-                let res = decodeURIComponent(escape(atob(b64)));
+                let res = decodeB64toUTF8(b64); // Usa o novo motor
                 document.getElementById('plainText').value = res;
                 document.getElementById('cipherText').value = "";
                 showToast("Texto Liberado!", "lock_open");
@@ -353,24 +360,20 @@
             }
         }
 
-        // SISTEMA DE TOAST (CORRIGIDO)
+        // SISTEMA DE TOAST
         let toastTimeout;
         function showToast(msg, iconName = "info") {
             const toast = document.getElementById("toast");
             toast.innerHTML = `<span class="material-symbols-outlined" style="font-size: 20px;">${iconName}</span> <span>${msg}</span>`;
             
-            // Remove a classe se já estiver lá para reiniciar a animação
             toast.classList.remove("show");
-            
-            // Força o navegador a recalcular o frame (Reflow)
-            void toast.offsetWidth;
-            
+            void toast.offsetWidth; // Reflow
             toast.classList.add("show");
             
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toast.classList.remove("show");
-            }, 2500); // Fica 2.5s na tela
+            }, 2500);
         }
     </script>
 </body>
