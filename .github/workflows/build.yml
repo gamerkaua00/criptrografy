@@ -1,0 +1,46 @@
+name: Gerar APK KMZ
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilar Android
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixa seu código
+      - name: Checkout do Código
+        uses: actions/checkout@v3
+
+      # 2. Configura JDK (Java) necessário para compilar
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Transforma o HTML em App (Usando Capacitor/Web-to-App simplificado)
+      # Esta action é específica para criar APKs de sites estáticos sem package.json complexo
+      - name: Build APK from HTML
+        uses: themow/web-to-app-action@v1
+        with:
+          path: '.' 
+          app_name: 'KMZ Secure'
+          package_name: 'com.kmz.interprise.secure'
+          version_code: 1
+          version_name: '2.0.0'
+          icon_path: './icon.png'
+          orientation: 'portrait'
+          fullscreen: true
+          # Isso garante cor escura na barra de navegação se o celular tiver
+          status_bar_color: '#000000' 
+
+      # 4. Salva o APK para você baixar
+      - name: Upload do APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KMZ-Secure-App
+          path: app-release-unsigned.apk
