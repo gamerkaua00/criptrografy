@@ -10,7 +10,7 @@
         :root {
             --bg-dark: #030303;
             --surface: rgba(20, 20, 20, 0.85);
-            --primary: #00ff41; /* Verde Matrix Vibrante */
+            --primary: #00ff41;
             --primary-dim: rgba(0, 255, 65, 0.2);
             --text-light: #f0f0f0;
             --text-muted: #888888;
@@ -18,14 +18,21 @@
             --danger: #ff4d4d;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
-
+        /* RESET - Proibindo seleção global para não bugar botões */
+        * { box-sizing: border-box; outline: none; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body {
             background: radial-gradient(circle at top, #111111, var(--bg-dark));
             color: var(--text-light);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
+            user-select: none; -webkit-user-select: none; /* Bloqueia seleção no corpo do app */
+        }
+
+        /* LIBERANDO O COLAR/COPIAR NATIVO APENAS NAS CAIXAS DE TEXTO */
+        input, textarea {
+            user-select: text !important;
+            -webkit-user-select: text !important;
         }
 
         /* --- CUSTOM SCROLLBAR --- */
@@ -34,17 +41,23 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- TOAST NOTIFICATION (Substitui o alert feio) --- */
+        /* --- TOAST NOTIFICATION (CORRIGIDO PARA USO DE GPU) --- */
         #toast {
-            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translate(-50%, 150%); /* Começa invisível abaixo da tela */
+            opacity: 0;
             background: var(--primary); color: #000;
-            padding: 12px 24px; border-radius: 30px;
-            font-weight: bold; font-size: 0.9rem; letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px var(--primary-dim);
-            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 14px 28px; border-radius: 30px;
+            font-weight: bold; font-size: 0.95rem; letter-spacing: 0.5px;
+            box-shadow: 0 5px 20px var(--primary-dim);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
             z-index: 10000; display: flex; align-items: center; gap: 8px;
+            white-space: nowrap;
         }
-        #toast.show { bottom: 30px; }
+        #toast.show {
+            transform: translate(-50%, 0); /* Sobe para a posição normal */
+            opacity: 1;
+        }
 
         /* --- SPLASH KMZ --- */
         #splash {
@@ -121,25 +134,30 @@
 
         .divider { height: 1px; background: var(--border); margin: 5px 0; }
 
-        /* --- MODAL DE CONFIGURAÇÕES --- */
+        /* --- MODAL DE CONFIGURAÇÕES (MAIOR E MAIS IMPONENTE) --- */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
             z-index: 5000; display: none; justify-content: center; align-items: center;
         }
         .modal-box {
-            background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--border);
-            text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            background: #111; padding: 40px 30px; border-radius: 20px; border: 1px solid var(--border);
+            text-align: center; width: 90%; max-width: 400px; /* Aumentado! */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
         }
-        .modal-box h3 { color: var(--primary); margin-bottom: 5px; letter-spacing: 1px; }
-        .modal-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
-        .dev-badge { background: #222; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 20px; border: 1px solid #333; }
-        .dev-badge strong { color: #fff; }
+        .modal-box h3 { color: var(--primary); margin-bottom: 5px; letter-spacing: 2px; font-size: 1.5rem; }
+        .modal-box p { color: var(--text-muted); font-size: 1rem; margin-bottom: 25px; line-height: 1.5; }
+        .dev-badge {
+            background: #1a1a1a; padding: 15px; border-radius: 12px; font-size: 0.95rem; 
+            margin-bottom: 25px; border: 1px solid #333;
+        }
+        .dev-badge strong { color: #fff; font-size: 1.1rem; }
+        .btn-modal { padding: 16px; font-size: 1rem; }
     </style>
 </head>
 <body>
 
-    <div id="toast"><span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span> <span id="toast-msg">Sucesso</span></div>
+    <div id="toast"><span class="material-symbols-outlined" style="font-size: 20px;">info</span> <span id="toast-msg">Mensagem</span></div>
 
     <div id="splash">
         <div class="splash-logo">KMZ</div>
@@ -148,8 +166,8 @@
 
     <div id="login-screen" class="screen">
         <div class="login-box">
-            <span class="material-symbols-outlined" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;">admin_panel_settings</span>
-            <h2 style="margin-bottom: 25px; font-size: 1.2rem; letter-spacing: 2px;">AUTENTICAÇÃO</h2>
+            <span class="material-symbols-outlined" style="font-size: 45px; color: var(--primary); margin-bottom: 15px;">admin_panel_settings</span>
+            <h2 style="margin-bottom: 25px; font-size: 1.3rem; letter-spacing: 2px;">AUTENTICAÇÃO</h2>
             
             <div class="input-group">
                 <input type="text" id="user" placeholder="Usuário" autocomplete="off">
@@ -161,7 +179,7 @@
             <button class="btn-login" onclick="login()">ACESSAR SISTEMA</button>
             <p id="error-msg" style="color: var(--danger); font-size: 0.85rem; margin-top: 15px; display: none; font-weight: bold;">Credenciais Incorretas</p>
         </div>
-        <div style="margin-top: 30px; font-size: 0.7rem; color: #555;">© 2026 KMZ INTERPRISE</div>
+        <div style="margin-top: 30px; font-size: 0.75rem; color: #555; letter-spacing: 1px;">© 2026 KMZ INTERPRISE</div>
     </div>
 
     <div id="app-screen" class="screen">
@@ -174,7 +192,7 @@
 
         <div class="text-section">
             <div class="section-title">MENSAGEM ORIGINAL</div>
-            <textarea id="plainText" placeholder="Escreva o texto legível aqui..."></textarea>
+            <textarea id="plainText" placeholder="Escreva ou cole o texto legível aqui..."></textarea>
             
             <div class="controls">
                 <button class="btn btn-action" onclick="encriptar()">
@@ -193,7 +211,7 @@
 
         <div class="text-section">
             <div class="section-title">CÓDIGO CRIPTOGRAFADO</div>
-            <textarea id="cipherText" placeholder="Resultado processado..."></textarea>
+            <textarea id="cipherText" placeholder="Cole o código recebido ou veja o resultado aqui..."></textarea>
             
             <div class="controls">
                 <button class="btn btn-outline" onclick="decriptar()">
@@ -212,17 +230,17 @@
     <div id="modal">
         <div class="modal-box">
             <h3>KMZ SYSTEM</h3>
-            <p>Protocolo de Criptografia v6.0</p>
+            <p>Protocolo de Criptografia v6.1</p>
             
             <div class="dev-badge">
                 Desenvolvido por<br><strong>Kauã Mazur dos Reis</strong><br>
-                <span style="font-size: 0.75rem; color: #888; display: block; margin-top: 5px;">kmzsuportt1@gmail.com</span>
+                <span style="font-size: 0.85rem; color: #888; display: block; margin-top: 5px;">kmzsuportt1@gmail.com</span>
             </div>
             
-            <button class="btn" onclick="logout()" style="background: var(--danger); color: #fff; width: 100%; margin-bottom: 10px;">
+            <button class="btn btn-modal" onclick="logout()" style="background: var(--danger); color: #fff; width: 100%; margin-bottom: 12px;">
                 <span class="material-symbols-outlined">logout</span> ENCERRAR SESSÃO
             </button>
-            <button class="btn btn-outline" onclick="toggleModal()" style="width: 100%; border-color: var(--border); color: var(--text-light);">
+            <button class="btn btn-outline btn-modal" onclick="toggleModal()" style="width: 100%; border-color: var(--border); color: var(--text-light);">
                 VOLTAR
             </button>
         </div>
@@ -231,11 +249,9 @@
     <script type="text/javascript" src="cordova.js"></script>
     
     <script>
-        // --- CONSTANTES DO SISTEMA ---
         const CRED = { u: "Admin", p: "028929" };
         const KEY = "kmz_auth_v6";
 
-        // --- INICIALIZAÇÃO ---
         window.onload = () => {
             setTimeout(() => {
                 document.getElementById('splash').style.opacity = 0;
@@ -245,17 +261,12 @@
                         document.getElementById('app-screen').style.display = 'flex';
                     } else {
                         document.getElementById('login-screen').style.display = 'flex';
-                        // Foca automaticamente no usuário
-                        document.getElementById('user').focus();
                     }
                 }, 500);
-            }, 1200); // Splash ágil de 1.2s
+            }, 1000); // Splash ainda mais ágil
         };
 
-        // --- AUTENTICAÇÃO ---
-        function handleEnter(e) {
-            if(e.key === 'Enter') login();
-        }
+        function handleEnter(e) { if(e.key === 'Enter') login(); }
 
         function login() {
             const u = document.getElementById('user').value;
@@ -264,11 +275,10 @@
                 localStorage.setItem(KEY, "true");
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'flex';
-                showToast("Acesso Liberado");
+                showToast("Acesso Liberado", "check_circle");
             } else {
                 const err = document.getElementById('error-msg');
                 err.style.display = 'block';
-                // Efeito visual de erro
                 const box = document.querySelector('.login-box');
                 box.style.transform = "translateX(8px)";
                 setTimeout(() => box.style.transform = "translateX(-8px)", 100);
@@ -276,95 +286,91 @@
             }
         }
 
-        function logout() {
-            localStorage.removeItem(KEY);
-            location.reload();
-        }
+        function logout() { localStorage.removeItem(KEY); location.reload(); }
 
         function toggleModal() {
             const m = document.getElementById('modal');
             m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // --- MOTOR DE CRIPTOGRAFIA ---
+        // MOTOR DE CRIPTOGRAFIA
         const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         const B = "∆ΩθμπΣΦΨωζξλβγα¬®©™£¢§¶¥€!@#$abcdefghijklmnopqrstuvwxyz123456789%&*"; 
 
         function encriptar() {
             let txt = document.getElementById('plainText').value;
-            if(!txt) return showToast("Digite algo primeiro!");
+            if(!txt) return showToast("Digite algo primeiro!", "warning");
             try {
                 let b64 = btoa(unescape(encodeURIComponent(txt)));
                 let res = "";
                 for(let c of b64) res += (A.indexOf(c) > -1) ? B[A.indexOf(c)] : c;
                 document.getElementById('cipherText').value = res;
                 document.getElementById('plainText').value = "";
-                showToast("Texto Bloqueado!");
-            } catch(e) { showToast("Erro no processamento."); }
+                showToast("Texto Bloqueado!", "lock");
+            } catch(e) { showToast("Erro no processamento.", "error"); }
         }
 
         function decriptar() {
             let txt = document.getElementById('cipherText').value;
-            if(!txt) return showToast("Cole o código primeiro!");
+            if(!txt) return showToast("Cole o código primeiro!", "warning");
             try {
                 let b64 = "";
                 for(let c of txt) b64 += (B.indexOf(c) > -1) ? A[B.indexOf(c)] : c;
                 let res = decodeURIComponent(escape(atob(b64)));
                 document.getElementById('plainText').value = res;
                 document.getElementById('cipherText').value = "";
-                showToast("Texto Liberado!");
-            } catch(e) { showToast("Código inválido ou corrompido."); }
+                showToast("Texto Liberado!", "lock_open");
+            } catch(e) { showToast("Código inválido ou corrompido.", "error"); }
         }
 
-        // --- FUNÇÕES DE COMPARTILHAMENTO E CÓPIA ---
-        
+        // FUNÇÕES COMPARTILHAR / COPIAR
         function compartilhar(id) {
             let texto = document.getElementById(id).value;
-            if (!texto) return showToast("A caixa de texto está vazia.");
+            if (!texto) return showToast("A caixa está vazia.", "warning");
 
-            // Usa o plugin nativo do Cordova (SocialSharing)
             if (window.plugins && window.plugins.socialsharing) {
                 window.plugins.socialsharing.share(texto, 'KMZ Secure Message', null, null);
-            } 
-            // Fallback para Web (Se testar no PC/Navegador)
-            else if (navigator.share) {
+            } else if (navigator.share) {
                 navigator.share({ text: texto }).catch(console.error);
-            } 
-            else {
+            } else {
                 copiar(id);
-                showToast("Compartilhar indisponível. Texto copiado!");
             }
         }
 
         function copiar(id) {
             let el = document.getElementById(id);
-            if (!el.value) return showToast("Nada para copiar.");
+            if (!el.value) return showToast("Nada para copiar.", "warning");
             
             el.select();
-            el.setSelectionRange(0, 99999); // Para mobile
-            
+            el.setSelectionRange(0, 99999);
             try {
                 let successful = document.execCommand('copy');
-                if(successful) showToast("Copiado para área de transferência!");
-                else throw new Error();
+                if(successful) showToast("Copiado!", "content_copy");
             } catch (err) {
                 if(navigator.clipboard) {
-                    navigator.clipboard.writeText(el.value).then(() => showToast("Copiado!"));
+                    navigator.clipboard.writeText(el.value).then(() => showToast("Copiado!", "content_copy"));
                 }
             }
         }
 
-        // --- SISTEMA DE TOAST (Notificações Flutuantes) ---
+        // SISTEMA DE TOAST (CORRIGIDO)
         let toastTimeout;
-        function showToast(msg) {
+        function showToast(msg, iconName = "info") {
             const toast = document.getElementById("toast");
-            document.getElementById("toast-msg").innerText = msg;
+            toast.innerHTML = `<span class="material-symbols-outlined" style="font-size: 20px;">${iconName}</span> <span>${msg}</span>`;
+            
+            // Remove a classe se já estiver lá para reiniciar a animação
+            toast.classList.remove("show");
+            
+            // Força o navegador a recalcular o frame (Reflow)
+            void toast.offsetWidth;
+            
             toast.classList.add("show");
             
             clearTimeout(toastTimeout);
             toastTimeout = setTimeout(() => {
                 toast.classList.remove("show");
-            }, 3000);
+            }, 2500); // Fica 2.5s na tela
         }
     </script>
 </body>
