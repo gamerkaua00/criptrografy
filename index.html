@@ -3,155 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KMZ Secure</title>
+    <title>KMZ Secure Protocol</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <style>
+        /* --- PALETA PREMIUM --- */
         :root {
-            --bg: #000000;
-            --surface: #101010;
-            --primary: #00e676;
-            --text: #e0e0e0;
-            --accent: #222;
+            --bg-dark: #030303;
+            --surface: rgba(20, 20, 20, 0.85);
+            --primary: #00ff41; /* Verde Matrix Vibrante */
+            --primary-dim: rgba(0, 255, 65, 0.2);
+            --text-light: #f0f0f0;
+            --text-muted: #888888;
+            --border: #2a2a2a;
+            --danger: #ff4d4d;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
+            background: radial-gradient(circle at top, #111111, var(--bg-dark));
+            color: var(--text-light);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; padding: 0;
-            height: 100vh; overflow: hidden; /* Trava rolagem do corpo */
+            height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
         }
 
-        /* --- SPLASH KMZ (RÁPIDO E LIMPO) --- */
+        /* --- CUSTOM SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- TOAST NOTIFICATION (Substitui o alert feio) --- */
+        #toast {
+            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: #000;
+            padding: 12px 24px; border-radius: 30px;
+            font-weight: bold; font-size: 0.9rem; letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px var(--primary-dim);
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10000; display: flex; align-items: center; gap: 8px;
+        }
+        #toast.show { bottom: 30px; }
+
+        /* --- SPLASH KMZ --- */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 0.5s ease-out;
+            transition: opacity 0.6s ease;
         }
-        .splash-logo { font-size: 3rem; font-weight: 900; letter-spacing: 5px; color: var(--primary); animation: scaleUp 0.5s ease-out; }
-        .splash-bar { width: 100px; height: 3px; background: #333; margin-top: 15px; border-radius: 2px; overflow: hidden; }
-        .splash-fill { height: 100%; background: var(--primary); width: 0%; animation: fillBar 1.2s forwards; }
+        .splash-logo { font-size: 3.5rem; font-weight: 900; letter-spacing: 6px; color: var(--primary); text-shadow: 0 0 20px var(--primary-dim); }
+        .splash-sub { color: var(--text-muted); letter-spacing: 3px; font-size: 0.8rem; margin-top: 5px; }
+        
+        /* --- TELAS GERAIS --- */
+        .screen { display: none; flex-direction: column; height: 100%; width: 100%; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- TELAS --- */
-        .screen { display: none; flex-direction: column; height: 100%; width: 100%; }
-
-        /* --- LOGIN --- */
-        #login-screen { justify-content: center; align-items: center; padding: 30px; }
-        .input-box { width: 100%; max-width: 300px; margin-bottom: 15px; }
-        input {
-            width: 100%; padding: 15px; background: var(--surface); border: 1px solid var(--accent);
-            color: #fff; border-radius: 8px; font-size: 16px; text-align: center;
+        /* --- LOGIN SCREEN --- */
+        #login-screen { justify-content: center; align-items: center; padding: 20px; }
+        .login-box {
+            background: var(--surface); backdrop-filter: blur(10px);
+            padding: 40px 30px; border-radius: 20px; border: 1px solid var(--border);
+            width: 100%; max-width: 340px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        input:focus { border-color: var(--primary); }
+        .input-group { margin-bottom: 20px; position: relative; }
+        .input-group input {
+            width: 100%; padding: 16px; background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border); color: #fff; border-radius: 12px;
+            font-size: 16px; transition: 0.3s; text-align: center;
+        }
+        .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-dim); }
+        .btn-login {
+            width: 100%; background: var(--primary); color: #000; padding: 16px;
+            border: none; border-radius: 12px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; transition: 0.2s; letter-spacing: 1px;
+        }
+        .btn-login:active { transform: scale(0.97); }
 
-        /* --- APP LAYOUT (FLEXBOX PARA TEXTO GRANDE) --- */
-        #app-screen { padding: 15px; display: none; flex-direction: column; gap: 10px; }
+        /* --- APP MAIN SCREEN --- */
+        #app-screen { padding: 20px; display: none; flex-direction: column; gap: 15px; }
         
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 10px; border-bottom: 1px solid var(--accent);
+            padding-bottom: 15px; border-bottom: 1px solid var(--border);
         }
-        .brand { font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; }
-
-        /* Área de Texto Flexível - O segredo para textos grandes */
-        .text-container {
-            flex: 1; /* Ocupa todo espaço disponível */
-            display: flex; flex-direction: column; gap: 5px;
-            min-height: 0; /* Permite encolher se necessário */
-        }
-        textarea {
-            flex: 1; /* Cresce para preencher o container */
-            width: 100%; background: var(--surface); border: 1px solid var(--accent);
-            color: #fff; padding: 15px; border-radius: 8px; resize: none;
-            font-family: 'Courier New', monospace; font-size: 14px;
-        }
-        textarea:focus { border-color: var(--primary); }
-
-        /* Botões */
-        .actions { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; margin-top: 5px; }
+        .brand { font-weight: 800; font-size: 1.3rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+        .brand span { color: var(--primary); }
         
-        button {
-            padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 5px;
+        /* Layout Flexível para Textos */
+        .text-section { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+        .section-title { font-size: 0.75rem; color: var(--text-muted); font-weight: bold; letter-spacing: 1px; padding-left: 5px; }
+        
+        textarea {
+            flex: 1; width: 100%; background: var(--surface); border: 1px solid var(--border);
+            color: var(--text-light); padding: 15px; border-radius: 12px; resize: none;
+            font-family: 'Courier New', monospace; font-size: 15px; line-height: 1.5;
+            transition: 0.3s; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
         }
-        .btn-lock { background: var(--primary); color: #000; }
-        .btn-unlock { background: var(--surface); border: 1px solid var(--primary); color: var(--primary); }
-        .btn-icon { background: var(--surface); color: var(--text); border: 1px solid var(--accent); width: 50px; }
-        .btn-login { width: 100%; max-width: 300px; background: var(--primary); color: #000; padding: 15px; font-size: 1rem; }
+        textarea:focus { border-color: var(--primary); background: #111; }
+        #cipherText { color: var(--primary); font-weight: bold; }
 
-        /* Modal Config */
+        /* Controles (Botões) */
+        .controls { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; }
+        
+        .btn {
+            padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
+        
+        .btn-action { background: var(--primary); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-icon { background: var(--surface); border: 1px solid var(--border); color: var(--text-light); width: 52px; }
+        .btn-icon:hover { border-color: var(--text-muted); }
+
+        .divider { height: 1px; background: var(--border); margin: 5px 0; }
+
+        /* --- MODAL DE CONFIGURAÇÕES --- */
         #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 5000; display: none;
-            justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 5000; display: none; justify-content: center; align-items: center;
         }
-        .modal-box { background: var(--surface); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid var(--accent); }
-
-        @keyframes fillBar { 0% { width: 0%; } 100% { width: 100%; } }
-        @keyframes scaleUp { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .modal-box {
+            background: #111; padding: 30px; border-radius: 20px; border: 1px solid var(--border);
+            text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+        }
+        .modal-box h3 { color: var(--primary); margin-bottom: 5px; letter-spacing: 1px; }
+        .modal-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.4; }
+        .dev-badge { background: #222; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 20px; border: 1px solid #333; }
+        .dev-badge strong { color: #fff; }
     </style>
 </head>
 <body>
 
+    <div id="toast"><span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span> <span id="toast-msg">Sucesso</span></div>
+
     <div id="splash">
         <div class="splash-logo">KMZ</div>
-        <div class="splash-bar"><div class="splash-fill"></div></div>
+        <div class="splash-sub">SECURE SYSTEM</div>
     </div>
 
     <div id="login-screen" class="screen">
-        <div style="margin-bottom: 40px; text-align: center;">
-            <div style="font-size: 2rem; font-weight: bold; color: var(--primary);">KMZ LOCK</div>
-            <div style="font-size: 0.8rem; color: #666;">SECURE ACCESS</div>
+        <div class="login-box">
+            <span class="material-symbols-outlined" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;">admin_panel_settings</span>
+            <h2 style="margin-bottom: 25px; font-size: 1.2rem; letter-spacing: 2px;">AUTENTICAÇÃO</h2>
+            
+            <div class="input-group">
+                <input type="text" id="user" placeholder="Usuário" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="password" id="pass" placeholder="Senha" autocomplete="off" onkeypress="handleEnter(event)">
+            </div>
+            
+            <button class="btn-login" onclick="login()">ACESSAR SISTEMA</button>
+            <p id="error-msg" style="color: var(--danger); font-size: 0.85rem; margin-top: 15px; display: none; font-weight: bold;">Credenciais Incorretas</p>
         </div>
-        <div class="input-box"><input type="text" id="user" placeholder="Usuário"></div>
-        <div class="input-box"><input type="password" id="pass" placeholder="Senha"></div>
-        <button class="btn-login" onclick="login()">ENTRAR</button>
-        <p id="error-msg" style="color: #cf6679; display: none; margin-top: 15px;">Acesso Negado</p>
+        <div style="margin-top: 30px; font-size: 0.7rem; color: #555;">© 2026 KMZ INTERPRISE</div>
     </div>
 
     <div id="app-screen" class="screen">
         <div class="header">
-            <div class="brand">KMZ <span style="color:var(--primary)">SECURE</span></div>
-            <button class="btn-icon" onclick="toggleModal()" style="width: 40px; height: 40px; border-radius: 50%;">
+            <div class="brand"><span class="material-symbols-outlined">shield</span> KMZ <span>SECURE</span></div>
+            <button class="btn btn-icon" onclick="toggleModal()" style="border-radius: 50%; width: 45px; height: 45px;">
                 <span class="material-symbols-outlined">settings</span>
             </button>
         </div>
 
-        <div class="text-container">
-            <div style="font-size: 0.8rem; color: #666;">TEXTO ORIGINAL</div>
-            <textarea id="plainText" placeholder="Digite sua mensagem aqui..."></textarea>
+        <div class="text-section">
+            <div class="section-title">MENSAGEM ORIGINAL</div>
+            <textarea id="plainText" placeholder="Escreva o texto legível aqui..."></textarea>
             
-            <div class="actions">
-                <button class="btn-lock" onclick="encriptar()">
+            <div class="controls">
+                <button class="btn btn-action" onclick="encriptar()">
                     <span class="material-symbols-outlined">lock</span> BLOQUEAR
                 </button>
-                <button class="btn-icon" onclick="compartilhar('plainText')">
+                <button class="btn btn-icon" onclick="compartilhar('plainText')">
                     <span class="material-symbols-outlined">share</span>
                 </button>
-                <button class="btn-icon" onclick="copiar('plainText')">
+                <button class="btn btn-icon" onclick="copiar('plainText')">
                     <span class="material-symbols-outlined">content_copy</span>
                 </button>
             </div>
         </div>
 
-        <div style="height: 1px; background: var(--accent); margin: 5px 0;"></div>
+        <div class="divider"></div>
 
-        <div class="text-container">
-            <div style="font-size: 0.8rem; color: #666;">CÓDIGO CRIPTOGRAFADO</div>
-            <textarea id="cipherText" style="color: var(--primary);" placeholder="Resultado..."></textarea>
+        <div class="text-section">
+            <div class="section-title">CÓDIGO CRIPTOGRAFADO</div>
+            <textarea id="cipherText" placeholder="Resultado processado..."></textarea>
             
-            <div class="actions">
-                <button class="btn-unlock" onclick="decriptar()">
+            <div class="controls">
+                <button class="btn btn-outline" onclick="decriptar()">
                     <span class="material-symbols-outlined">lock_open</span> LIBERAR
                 </button>
-                <button class="btn-icon" onclick="compartilhar('cipherText')">
+                <button class="btn btn-icon" onclick="compartilhar('cipherText')">
                     <span class="material-symbols-outlined">share</span>
                 </button>
-                <button class="btn-icon" onclick="copiar('cipherText')">
+                <button class="btn btn-icon" onclick="copiar('cipherText')">
                     <span class="material-symbols-outlined">content_copy</span>
                 </button>
             </div>
@@ -160,44 +211,68 @@
 
     <div id="modal">
         <div class="modal-box">
-            <h3 style="color: var(--primary); margin-top:0;">KMZ SYSTEM</h3>
-            <p style="color: #aaa; font-size: 0.9rem;">v5.0 Stable Release</p>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
-            <p style="font-size: 0.9rem;">Dev: <strong>Kauã Mazur</strong></p>
-            <p style="font-size: 0.8rem; color: #666;">kmzsuportt1@gmail.com</p>
-            <br>
-            <button onclick="logout()" style="background: #cf6679; color: #fff; width: 100%;">SAIR</button>
-            <button onclick="toggleModal()" style="background: transparent; border: 1px solid #333; color: #fff; width: 100%; margin-top: 10px;">FECHAR</button>
+            <h3>KMZ SYSTEM</h3>
+            <p>Protocolo de Criptografia v6.0</p>
+            
+            <div class="dev-badge">
+                Desenvolvido por<br><strong>Kauã Mazur dos Reis</strong><br>
+                <span style="font-size: 0.75rem; color: #888; display: block; margin-top: 5px;">kmzsuportt1@gmail.com</span>
+            </div>
+            
+            <button class="btn" onclick="logout()" style="background: var(--danger); color: #fff; width: 100%; margin-bottom: 10px;">
+                <span class="material-symbols-outlined">logout</span> ENCERRAR SESSÃO
+            </button>
+            <button class="btn btn-outline" onclick="toggleModal()" style="width: 100%; border-color: var(--border); color: var(--text-light);">
+                VOLTAR
+            </button>
         </div>
     </div>
 
+    <script type="text/javascript" src="cordova.js"></script>
+    
     <script>
-        // --- SISTEMA ---
+        // --- CONSTANTES DO SISTEMA ---
         const CRED = { u: "Admin", p: "028929" };
-        const KEY = "kmz_token";
+        const KEY = "kmz_auth_v6";
 
+        // --- INICIALIZAÇÃO ---
         window.onload = () => {
-            // Splash rápido (1.3s)
             setTimeout(() => {
                 document.getElementById('splash').style.opacity = 0;
                 setTimeout(() => {
                     document.getElementById('splash').style.display = 'none';
-                    if(localStorage.getItem(KEY)) {
+                    if(localStorage.getItem(KEY) === "true") {
                         document.getElementById('app-screen').style.display = 'flex';
                     } else {
                         document.getElementById('login-screen').style.display = 'flex';
+                        // Foca automaticamente no usuário
+                        document.getElementById('user').focus();
                     }
-                }, 400);
-            }, 1300);
+                }, 500);
+            }, 1200); // Splash ágil de 1.2s
         };
 
+        // --- AUTENTICAÇÃO ---
+        function handleEnter(e) {
+            if(e.key === 'Enter') login();
+        }
+
         function login() {
-            if(document.getElementById('user').value === CRED.u && document.getElementById('pass').value === CRED.p) {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            if(u === CRED.u && p === CRED.p) {
                 localStorage.setItem(KEY, "true");
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'flex';
+                showToast("Acesso Liberado");
             } else {
-                document.getElementById('error-msg').style.display = 'block';
+                const err = document.getElementById('error-msg');
+                err.style.display = 'block';
+                // Efeito visual de erro
+                const box = document.querySelector('.login-box');
+                box.style.transform = "translateX(8px)";
+                setTimeout(() => box.style.transform = "translateX(-8px)", 100);
+                setTimeout(() => box.style.transform = "translateX(0)", 200);
             }
         }
 
@@ -211,74 +286,85 @@
             m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        // --- CRIPTOGRAFIA (V2.0) ---
+        // --- MOTOR DE CRIPTOGRAFIA ---
         const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
         const B = "∆ΩθμπΣΦΨωζξλβγα¬®©™£¢§¶¥€!@#$abcdefghijklmnopqrstuvwxyz123456789%&*"; 
 
         function encriptar() {
             let txt = document.getElementById('plainText').value;
-            if(!txt) return;
+            if(!txt) return showToast("Digite algo primeiro!");
             try {
                 let b64 = btoa(unescape(encodeURIComponent(txt)));
                 let res = "";
                 for(let c of b64) res += (A.indexOf(c) > -1) ? B[A.indexOf(c)] : c;
                 document.getElementById('cipherText').value = res;
                 document.getElementById('plainText').value = "";
-            } catch(e) {}
+                showToast("Texto Bloqueado!");
+            } catch(e) { showToast("Erro no processamento."); }
         }
 
         function decriptar() {
             let txt = document.getElementById('cipherText').value;
-            if(!txt) return;
+            if(!txt) return showToast("Cole o código primeiro!");
             try {
                 let b64 = "";
                 for(let c of txt) b64 += (B.indexOf(c) > -1) ? A[B.indexOf(c)] : c;
                 let res = decodeURIComponent(escape(atob(b64)));
                 document.getElementById('plainText').value = res;
                 document.getElementById('cipherText').value = "";
-            } catch(e) { alert("Erro na decriptação"); }
+                showToast("Texto Liberado!");
+            } catch(e) { showToast("Código inválido ou corrompido."); }
         }
 
-        // --- FUNÇÕES DE INTERAÇÃO (SHARE & COPY) ---
+        // --- FUNÇÕES DE COMPARTILHAMENTO E CÓPIA ---
         
-        // 1. MODO COMPARTILHAR (Novo!)
         function compartilhar(id) {
             let texto = document.getElementById(id).value;
-            if (!texto) return alert("Nada para enviar!");
+            if (!texto) return showToast("A caixa de texto está vazia.");
 
-            // Verifica se o celular suporta compartilhamento nativo
-            if (navigator.share) {
-                navigator.share({
-                    title: 'KMZ Secure Message',
-                    text: texto
-                }).catch(console.error);
-            } else {
-                // Se não suportar (PC ou Android muito velho), faz a cópia normal
+            // Usa o plugin nativo do Cordova (SocialSharing)
+            if (window.plugins && window.plugins.socialsharing) {
+                window.plugins.socialsharing.share(texto, 'KMZ Secure Message', null, null);
+            } 
+            // Fallback para Web (Se testar no PC/Navegador)
+            else if (navigator.share) {
+                navigator.share({ text: texto }).catch(console.error);
+            } 
+            else {
                 copiar(id);
+                showToast("Compartilhar indisponível. Texto copiado!");
             }
         }
 
-        // 2. MODO COPIAR (Ultra Compatível)
         function copiar(id) {
             let el = document.getElementById(id);
-            if (!el.value) return;
-
+            if (!el.value) return showToast("Nada para copiar.");
+            
             el.select();
-            el.setSelectionRange(0, 99999);
+            el.setSelectionRange(0, 99999); // Para mobile
             
             try {
-                // Método antigo, mas infalível em WebViews
                 let successful = document.execCommand('copy');
-                if(successful) alert("Copiado!");
+                if(successful) showToast("Copiado para área de transferência!");
                 else throw new Error();
             } catch (err) {
-                // Método moderno (Fallback)
                 if(navigator.clipboard) {
-                    navigator.clipboard.writeText(el.value)
-                        .then(() => alert("Copiado!"))
-                        .catch(() => alert("Selecione o texto e copie manualmente."));
+                    navigator.clipboard.writeText(el.value).then(() => showToast("Copiado!"));
                 }
             }
+        }
+
+        // --- SISTEMA DE TOAST (Notificações Flutuantes) ---
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-msg").innerText = msg;
+            toast.classList.add("show");
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
         }
     </script>
 </body>
