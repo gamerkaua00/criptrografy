@@ -1,4 +1,4 @@
-name: Build KMZ Pro (No Splash)
+name: Build KMZ Pro (Clean Splash)
 
 on:
   push:
@@ -33,28 +33,35 @@ jobs:
           cd app
           cordova platform add android
           
-          # --- REMOÇÃO DO SPLASH SCREEN NATIVO ---
-          # Adiciona preferência para desativar o splash do Cordova
-          # Assim ele abre direto na tela preta do seu HTML
-          sed -i '/<\/widget>/i \    <preference name="SplashScreen" value="none" />' config.xml
-          sed -i '/<\/widget>/i \    <preference name="ShowSplashScreen" value="false" />' config.xml
-          sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
+          # --- INSTALAÇÃO DO PLUGIN DE SPLASH ---
+          # Isso é essencial para ter controle sobre a tela cinza
+          cordova plugin add cordova-plugin-splashscreen
           
-          # Limpa o app padrão e coloca o seu site
+          # --- REMOÇÃO AGRESSIVA DO SPLASH SCREEN NATIVO ---
+          # 1. Configura para não mostrar splash (AutoHide = true)
+          sed -i '/<\/widget>/i \    <preference name="AutoHideSplashScreen" value="true" />' config.xml
+          # 2. Define o tempo de exibição para 0 milissegundos
+          sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
+          # 3. Define a cor de fundo do splash nativo para preto (caso pisque)
+          sed -i '/<\/widget>/i \    <preference name="SplashScreenBackgroundColor" value="#000000" />' config.xml
+          # 4. Força o "ShowSplashScreen" para false
+          sed -i '/<\/widget>/i \    <preference name="ShowSplashScreen" value="false" />' config.xml
+          
+          # --- ARQUIVOS DO SITE ---
           rm -rf www/*
           cp ../index.html www/index.html
           
-          # Configura Ícone (se existir)
+          # --- ÍCONE ---
           if [ -f "../icon.png" ]; then
             cp ../icon.png www/icon.png
             sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' config.xml
           fi
           
-          # Compila em modo Debug (já assinado para instalar fácil)
+          # Compila em Debug (já assinado)
           cordova build android --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KMZ-Secure-App-v3
+          name: KMZ-Secure-App-Pro
           path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
