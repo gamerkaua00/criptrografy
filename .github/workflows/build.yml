@@ -1,4 +1,4 @@
-name: Build KMZ Ultimate
+name: Build KMZ Ultimate Fix
 
 on:
   push:
@@ -28,21 +28,24 @@ jobs:
         run: |
           npm install -g cordova
           
-          # Cria o app
           cordova create app com.kmz.secure "KMZ Secure"
           cd app
           cordova platform add android
           
-          # --- INSTALAÇÃO DOS PLUGINS NATIVOS ---
-          # Este plugin permite abrir o WhatsApp, Telegram, etc.
+          # Plugins
+          cordova plugin add cordova-plugin-splashscreen
           cordova plugin add cordova-plugin-x-socialsharing
           
-          # Removemos o plugin de splash nativo para não dar conflito com o Android 12+
-          # E configuramos o fundo obrigatório do Android para PRETO para ocultar o load
+          # --- CONFIGURAÇÃO EXTREMA PARA ANDROID 12+ SPLASH ---
+          # 1. Fundo Preto absoluto
           sed -i '/<\/widget>/i \    <preference name="AndroidWindowSplashScreenBackground" value="#000000" />' config.xml
+          # 2. Usa a logo da KMZ no lugar do robô no carregamento nativo
+          sed -i '/<\/widget>/i \    <preference name="AndroidWindowSplashScreenAnimatedIcon" value="www/icon.png" />' config.xml
+          # 3. Transição instantânea sem Fade
+          sed -i '/<\/widget>/i \    <preference name="FadeSplashScreenDuration" value="0" />' config.xml
           sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
           
-          # --- SEUS ARQUIVOS ---
+          # Copia os arquivos web
           rm -rf www/*
           cp ../index.html www/index.html
           
@@ -51,11 +54,11 @@ jobs:
             sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' config.xml
           fi
           
-          # Build Debug
+          # Build
           cordova build android --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KMZ-Secure-App-Ultimate
+          name: KMZ-Secure-App-Final
           path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
