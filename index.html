@@ -3,276 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KMZ Encryptor Protocol</title>
+    <title>KMZ Secure Protocol</title>
     <style>
-        /* --- ESTILO CYBERPUNK/MILITAR --- */
-        :root {
-            --primary: #00ff41; /* Verde Terminal */
-            --bg: #050505;
-            --panel: #0a0a0a;
-            --border: #1f1f1f;
-        }
+        /* --- ESTILO GERAL --- */
+        :root { --primary: #00ff41; --bg: #000000; --panel: #111; }
+        * { box-sizing: border-box; outline: none; }
         
-        * { box-sizing: border-box; }
-
         body {
             background-color: var(--bg);
             color: var(--primary);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 0;
+            font-family: 'Courier New', monospace;
+            margin: 0; padding: 0;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column;
             overflow: hidden;
-            text-transform: uppercase;
         }
 
-        /* --- SPLASH SCREEN --- */
+        /* --- SPLASH SCREEN (HTML) --- */
         #splash {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            transition: opacity 0.8s;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.5s;
         }
-        .logo-box {
-            border: 4px solid var(--primary);
-            padding: 20px 40px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
-            animation: flicker 2s infinite;
-        }
-        .logo-title { font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; margin: 0; }
-        .logo-sub { font-size: 0.8rem; letter-spacing: 2px; margin-top: 10px; color: #fff; }
-        .loading-bar { width: 200px; height: 4px; background: #333; margin-top: 20px; }
-        .progress { width: 0%; height: 100%; background: var(--primary); animation: load 2.5s forwards; }
+        .logo-text { font-size: 3rem; font-weight: 900; letter-spacing: 5px; border: 3px solid var(--primary); padding: 15px; }
+        .loading { width: 50%; height: 2px; background: #333; margin-top: 20px; }
+        .bar { height: 100%; background: var(--primary); animation: load 2s forwards; }
 
         /* --- LOGIN --- */
-        #login-panel {
-            display: none;
-            width: 85%;
-            max-width: 350px;
-            flex-direction: column;
-            gap: 15px;
-            background: var(--panel);
-            padding: 30px;
-            border: 1px solid var(--primary);
-            box-shadow: 10px 10px 0px rgba(0, 255, 65, 0.1);
+        #login-screen {
+            display: none; flex: 1;
+            justify-content: center; align-items: center; flex-direction: column;
+            padding: 20px;
         }
-        h3 { text-align: center; margin: 0 0 10px 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+        .login-box { width: 100%; max-width: 300px; text-align: center; }
         
-        input {
-            width: 100%;
-            padding: 15px;
-            background: #000;
-            border: 1px solid #333;
-            color: var(--primary);
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-            text-align: center;
+        /* --- APP --- */
+        #app-screen {
+            display: none; flex: 1; flex-direction: column;
+            padding: 15px; max-width: 600px; margin: 0 auto; width: 100%;
         }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
 
-        /* --- APP INTERFACE --- */
-        #app-interface {
-            display: none;
-            width: 95%;
-            max-width: 600px;
-            height: 95vh;
-            flex-direction: column;
+        input, textarea, button {
+            width: 100%; background: #0a0a0a; border: 1px solid #333;
+            color: var(--primary); font-family: inherit; padding: 15px;
+            margin-bottom: 10px; font-size: 1rem;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #333;
-            margin-bottom: 10px;
-        }
-        .status { font-size: 0.7rem; color: #666; }
-
-        textarea {
-            flex: 1;
-            background: #080808;
-            border: 1px solid #333;
-            color: #ddd;
-            padding: 15px;
-            resize: none;
-            font-size: 14px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        input:focus, textarea:focus { border-color: var(--primary); }
         
         button {
-            padding: 15px;
-            background: #002200;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.9rem;
+            background: #002200; font-weight: bold; cursor: pointer; text-transform: uppercase;
         }
         button:active { background: var(--primary); color: #000; }
-        
-        .copyright {
-            text-align: center;
-            font-size: 0.6rem;
-            color: #444;
-            margin-top: 5px;
-        }
 
-        /* Animações */
-        @keyframes flicker {
-            0% { opacity: 1; } 95% { opacity: 1; } 96% { opacity: 0.8; } 97% { opacity: 1; } 98% { opacity: 0.5; } 99% { opacity: 1; }
+        textarea { height: 120px; resize: none; }
+
+        /* --- RODAPÉ --- */
+        .footer-info {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.7rem;
+            color: #555;
+            padding: 10px;
+            border-top: 1px solid #222;
         }
-        @keyframes load { 0% { width: 0%; } 100% { width: 100%; } }
+        .footer-info a { color: #555; text-decoration: none; }
+
+        @keyframes load { 0% { width: 0; } 100% { width: 100%; } }
     </style>
 </head>
 <body>
 
     <div id="splash">
-        <div class="logo-box">
-            <h1 class="logo-title">KMZ</h1>
-            <div class="logo-sub">INTERPRISE SYSTEM</div>
-        </div>
-        <div class="loading-bar"><div class="progress"></div></div>
-        <div style="margin-top: 10px; font-size: 0.7rem; color: #555;">INITIATING SECURE PROTOCOL...</div>
+        <div class="logo-text">KMZ</div>
+        <div style="margin-top:5px; letter-spacing: 3px;">INTERPRISE</div>
+        <div class="loading"><div class="bar"></div></div>
     </div>
 
-    <div id="login-panel">
-        <h3>IDENTIFICAÇÃO</h3>
-        <input type="text" id="user" placeholder="USUÁRIO" autocomplete="off">
-        <input type="password" id="pass" placeholder="CHAVE DE ACESSO" autocomplete="off">
-        <button onclick="autenticar()">ACESSAR SISTEMA</button>
-        <div id="msg-erro" style="color: red; font-size: 0.8rem; text-align: center; display: none; margin-top: 10px;">ACESSO NEGADO</div>
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="border-bottom: 1px solid var(--primary); padding-bottom:10px;">ACESSO RESTRITO</h2>
+            <input type="text" id="user" placeholder="USUÁRIO" autocomplete="off">
+            <input type="password" id="pass" placeholder="SENHA" autocomplete="off">
+            <button onclick="login()">ENTRAR</button>
+            <p id="error" style="color:red; display:none; font-size:0.8rem;">DADOS INVÁLIDOS</p>
+        </div>
+        <div class="footer-info">
+            Sistema Seguro v3.1<br>
+            KMZ Interprise © 2026
+        </div>
     </div>
 
-    <div id="app-interface">
-        <div class="header">
-            <div>KMZ ENCRYPTOR <span style="font-size:0.6rem; vertical-align: super;">V2.0</span></div>
-            <div class="status">CONNECTED: ADMIN</div>
+    <div id="app-screen">
+        <div style="text-align:center; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">
+            <strong>KMZ ENCRYPTOR</strong>
         </div>
 
-        <textarea id="textoNormal" placeholder="DIGITE A MENSAGEM HUMANA AQUI..."></textarea>
+        <textarea id="normalText" placeholder="DIGITE A MENSAGEM CLARA..."></textarea>
+        <button onclick="encriptar()">🔒 BLOQUEAR (ENCRIPTAR)</button>
+        <button onclick="copiar('cipherText')" style="font-size:0.8rem; padding:10px;">COPIAR CÓDIGO</button>
         
-        <div class="controls">
-            <button onclick="encriptar()">🔒 BLOQUEAR</button>
-            <button onclick="copiar('textoCripto')">📋 COPIAR CÓDIGO</button>
-        </div>
+        <div style="margin: 15px 0; border-top:1px dashed #333;"></div>
 
-        <textarea id="textoCripto" placeholder="RESULTADO CRIPTOGRAFADO (IMPOSSÍVEL DE LER)..." style="color: var(--primary);"></textarea>
+        <textarea id="cipherText" placeholder="COLE O CÓDIGO ESTRANHO AQUI..." style="color:#aaa;"></textarea>
+        <button onclick="decriptar()">🔓 LIBERAR (DECRIPTAR)</button>
+        <button onclick="copiar('normalText')" style="font-size:0.8rem; padding:10px;">COPIAR TEXTO</button>
 
-        <div class="controls">
-            <button onclick="decriptar()">🔓 DESBLOQUEAR</button>
-            <button onclick="copiar('textoNormal')">📋 COPIAR TEXTO</button>
-        </div>
-        
-        <div class="copyright">
-            © 2026 KMZ INTERPRISE SOLUTIONS<br>TODOS OS DIREITOS RESERVADOS
+        <div class="footer-info">
+            Desenvolvido por: <strong>Kauã Mazur dos Reis</strong><br>
+            Suporte: <a href="mailto:kmzsuportt1@gmail.com">kmzsuportt1@gmail.com</a><br>
+            KMZ Interprise - Todos os direitos reservados.
         </div>
     </div>
 
     <script>
-        /* --- CONFIGURAÇÕES DE SEGURANÇA --- */
-        const CREDENCIAIS = { u: "Admin", p: "028929" };
+        // --- SEGURANÇA ---
+        const CREDENTIALS = { u: "Admin", p: "028929" };
 
-        /* --- LÓGICA DE INICIALIZAÇÃO --- */
+        // --- TABELAS DE CRIPTOGRAFIA ---
+        // Base64 Padrão (65 caracteres contando o '=')
+        const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+        
+        // KMZ Cipher (EXATAMENTE 65 caracteres únicos e malucos)
+        // Isso garante mapeamento 1:1 perfeito.
+        const CIPHER   = "∆ΩθμπΣΦΨωζξλβγα¬®©™£¢§¶¥€!@#$abcdefghijklmnopqrstuvwxyz123456789%&*"; 
+
+        // --- INICIALIZAÇÃO ---
         window.onload = () => {
             setTimeout(() => {
-                const splash = document.getElementById('splash');
-                splash.style.opacity = 0;
+                document.getElementById('splash').style.opacity = 0;
                 setTimeout(() => {
-                    splash.style.display = 'none';
-                    document.getElementById('login-panel').style.display = 'flex';
-                }, 800);
-            }, 2500);
+                    document.getElementById('splash').style.display = 'none';
+                    document.getElementById('login-screen').style.display = 'flex';
+                }, 500);
+            }, 2200);
         };
 
-        function autenticar() {
+        function login() {
             const u = document.getElementById('user').value;
             const p = document.getElementById('pass').value;
-            if(u === CREDENCIAIS.u && p === CREDENCIAIS.p) {
-                document.getElementById('login-panel').style.display = 'none';
-                document.getElementById('app-interface').style.display = 'flex';
+            if(u === CREDENTIALS.u && p === CREDENTIALS.p) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
             } else {
-                const erro = document.getElementById('msg-erro');
-                erro.style.display = 'block';
-                navigator.vibrate(200); // Vibra se estiver no celular
+                const err = document.getElementById('error');
+                err.style.display = 'block';
+                err.innerText = "ACESSO NEGADO";
             }
         }
 
-        /* --- MOTOR DE CRIPTOGRAFIA AVANÇADO --- */
-        // Alfabeto Base64 padrão
-        const base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-        // Alfabeto KMZ (Símbolos aleatórios que correspondem ao Base64)
-        // Isso garante que mesmo que alguém reconheça o padrão, não consiga ler sem essa tabela.
-        const kmzChars    = "∆ΩθμπΣΦΨωζξλβγα¬®©™£¢§¶¥€!@#$%&*()_+-=[]{}|;:,.<>?~^`1234567890";
-
         function encriptar() {
-            let texto = document.getElementById('textoNormal').value;
+            let texto = document.getElementById('normalText').value;
             if(!texto) return;
 
             try {
-                // 1. Converte texto normal para Base64 (trata acentos)
-                // Isso transforma "Oi" em "T2k=" (padrão)
-                let passo1 = btoa(unescape(encodeURIComponent(texto)));
+                // 1. Codifica para Base64 cuidando de acentos (UTF-8)
+                let b64 = btoa(unescape(encodeURIComponent(texto)));
                 
-                // 2. Substitui os caracteres do Base64 pelos símbolos KMZ
+                // 2. Substitui pelo alfabeto KMZ
                 let resultado = "";
-                for (let i = 0; i < passo1.length; i++) {
-                    let char = passo1[i];
-                    let index = base64Chars.indexOf(char);
-                    if (index !== -1) {
-                        // Se exceder a tabela KMZ, usa o próprio char (fallback de segurança)
-                        resultado += kmzChars[index] || char; 
-                    } else {
-                        resultado += char;
-                    }
+                for (let i = 0; i < b64.length; i++) {
+                    let char = b64[i];
+                    let index = ALPHABET.indexOf(char);
+                    // Se achar, troca. Se não achar (improvável), mantém.
+                    resultado += (index !== -1) ? CIPHER[index] : char;
                 }
-                
-                // Limpa entrada e mostra saída
-                document.getElementById('textoCripto').value = resultado;
-                document.getElementById('textoNormal').value = "";
+                document.getElementById('cipherText').value = resultado;
+                document.getElementById('normalText').value = ""; // Limpa para segurança
             } catch (e) {
-                alert("Erro ao processar texto. Evite emojis complexos.");
+                alert("Erro ao encriptar. Tente texto simples.");
             }
         }
 
         function decriptar() {
-            let codigo = document.getElementById('textoCripto').value;
+            let codigo = document.getElementById('cipherText').value;
             if(!codigo) return;
 
             try {
-                // 1. Reverte os símbolos KMZ para Base64 padrão
-                let passo1 = "";
+                // 1. Reverte KMZ para Base64 padrão
+                let b64 = "";
                 for (let i = 0; i < codigo.length; i++) {
                     let char = codigo[i];
-                    let index = kmzChars.indexOf(char);
-                    if (index !== -1) {
-                        passo1 += base64Chars[index];
-                    } else {
-                        passo1 += char;
-                    }
+                    let index = CIPHER.indexOf(char);
+                    b64 += (index !== -1) ? ALPHABET[index] : char;
                 }
 
-                // 2. Converte Base64 de volta para Texto Normal
-                let resultado = decodeURIComponent(escape(atob(passo1)));
-
-                document.getElementById('textoNormal').value = resultado;
-                document.getElementById('textoCripto').value = "";
+                // 2. Decodifica Base64 para texto com acentos
+                let texto = decodeURIComponent(escape(atob(b64)));
+                
+                document.getElementById('normalText').value = texto;
+                document.getElementById('cipherText').value = ""; // Limpa
             } catch (e) {
-                alert("Código inválido ou corrompido!");
+                alert("Código inválido ou corrompido! Verifique se copiou tudo.");
             }
         }
 
@@ -281,8 +204,7 @@
             el.select();
             el.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(el.value);
-            // Feedback visual rápido no botão
-            alert("COPIADO!");
+            alert("Copiado com sucesso!");
         }
     </script>
 </body>
