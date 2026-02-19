@@ -1,4 +1,4 @@
-name: Gerar APK KMZ
+name: Build KMZ Protocol (Manual Mode)
 
 on:
   push:
@@ -6,41 +6,69 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Compilar Android
+  build-android:
     runs-on: ubuntu-latest
-
+    
     steps:
-      # 1. Baixa seu código
-      - name: Checkout do Código
+      # 1. Pega seus arquivos (index.html, icon.png)
+      - name: Checkout Source
         uses: actions/checkout@v3
 
-      # 2. Configura JDK (Java) necessário para compilar
-      - name: Configurar JDK 17
+      # 2. Configura o Node.js (necessário para o Cordova)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. Configura o Java (necessário para criar APKs Android)
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Transforma o HTML em App (Usando Capacitor/Web-to-App simplificado)
-      # Esta action é específica para criar APKs de sites estáticos sem package.json complexo
-      - name: Build APK from HTML
-        uses: themow/web-to-app-action@v1
-        with:
-          path: '.' 
-          app_name: 'KMZ Secure'
-          package_name: 'com.kmz.interprise.secure'
-          version_code: 1
-          version_name: '2.0.0'
-          icon_path: './icon.png'
-          orientation: 'portrait'
-          fullscreen: true
-          # Isso garante cor escura na barra de navegação se o celular tiver
-          status_bar_color: '#000000' 
+      # 4. INSTALAÇÃO E CRIAÇÃO DO APP (A Mágica acontece aqui)
+      - name: Build Cordova App
+        run: |
+          # Instala o Cordova globalmente
+          npm install -g cordova
+          
+          # Cria o projeto Android limpo
+          # Nome da pasta: app
+          # ID do pacote: com.kmz.secure
+          # Nome do App: KMZ Secure
+          cordova create app com.kmz.secure "KMZ Secure"
+          
+          # Entra na pasta do app
+          cd app
+          
+          # Adiciona a plataforma Android
+          cordova platform add android
+          
+          # --- INJEÇÃO DO SEU CÓDIGO ---
+          # Remove o site padrão do Cordova
+          rm -rf www/*
+          
+          # Volta para a pasta raiz, pega SEU index.html e joga dentro do app
+          cp ../index.html www/index.html
+          
+          # --- CONFIGURAÇÃO DO ÍCONE ---
+          # Se existir um icon.png na raiz, a gente tenta usar
+          if [ -f "../icon.png" ]; then
+            echo "Ícone detectado! Copiando..."
+            cp ../icon.png www/icon.png
+            # Hack para inserir o ícone no config.xml usando sed (edição de texto via terminal)
+            sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' config.xml
+          fi
+          
+          # --- COMPILAÇÃO ---
+          # Gera o APK
+          cordova build android --release -- --packageType=apk
 
-      # 4. Salva o APK para você baixar
-      - name: Upload do APK
+      # 5. Encontra o APK gerado e prepara para upload
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: KMZ-Secure-App
-          path: app-release-unsigned.apk
+          # O caminho onde o Cordova cospe o arquivo
+          path: app/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
