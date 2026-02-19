@@ -1,4 +1,4 @@
-name: Build KMZ Pro (Clean Splash)
+name: Build KMZ Final
 
 on:
   push:
@@ -33,35 +33,34 @@ jobs:
           cd app
           cordova platform add android
           
-          # --- INSTALAÇÃO DO PLUGIN DE SPLASH ---
-          # Isso é essencial para ter controle sobre a tela cinza
+          # --- PLUGIN ESSENCIAL ---
           cordova plugin add cordova-plugin-splashscreen
           
-          # --- REMOÇÃO AGRESSIVA DO SPLASH SCREEN NATIVO ---
-          # 1. Configura para não mostrar splash (AutoHide = true)
-          sed -i '/<\/widget>/i \    <preference name="AutoHideSplashScreen" value="true" />' config.xml
-          # 2. Define o tempo de exibição para 0 milissegundos
-          sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
-          # 3. Define a cor de fundo do splash nativo para preto (caso pisque)
+          # --- CONFIGURAÇÃO AGRESSIVA DO CONFIG.XML ---
+          # 1. Background PRETO (Isso mata o visual do robô cinza)
           sed -i '/<\/widget>/i \    <preference name="SplashScreenBackgroundColor" value="#000000" />' config.xml
-          # 4. Força o "ShowSplashScreen" para false
-          sed -i '/<\/widget>/i \    <preference name="ShowSplashScreen" value="false" />' config.xml
           
-          # --- ARQUIVOS DO SITE ---
+          # 2. Esconde o splash o mais rápido possível (0ms)
+          sed -i '/<\/widget>/i \    <preference name="SplashScreenDelay" value="0" />' config.xml
+          sed -i '/<\/widget>/i \    <preference name="AutoHideSplashScreen" value="true" />' config.xml
+          
+          # 3. Força não mostrar o spinner de carregamento
+          sed -i '/<\/widget>/i \    <preference name="ShowSplashScreenSpinner" value="false" />' config.xml
+          
+          # --- SEUS ARQUIVOS ---
           rm -rf www/*
           cp ../index.html www/index.html
           
-          # --- ÍCONE ---
           if [ -f "../icon.png" ]; then
             cp ../icon.png www/icon.png
             sed -i '/<\/widget>/i \    <icon src="www/icon.png" />' config.xml
           fi
           
-          # Compila em Debug (já assinado)
+          # Build Debug (Assinado)
           cordova build android --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: KMZ-Secure-App-Pro
+          name: KMZ-Secure-App-Final
           path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
